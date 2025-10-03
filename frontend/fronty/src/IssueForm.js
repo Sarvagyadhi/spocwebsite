@@ -35,7 +35,7 @@ const IssueForm = ({ onSuccess }) => {
         if (!/^\d{10}$/.test(formData.mobile_number)) newErrors.mobile_number = 'Please enter a valid 10-digit mobile number';
         if (!formData.aadhar_number.trim()) newErrors.aadhar_number = 'Aadhar number is required';
         if (!/^\d{12}$/.test(formData.aadhar_number)) newErrors.aadhar_number = 'Please enter a valid 12-digit Aadhar number';
-        if (!formData.sex) newErrors.sex = 'Please select sex';
+        if (!formData.sex) newErrors.sex = 'Please select GENDER';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -168,7 +168,7 @@ const IssueForm = ({ onSuccess }) => {
 
                             <div className="form-row">
                                 <div>
-                                    <label className="form-label">Sex *</label>
+                                    <label className="form-label">Gender *</label>
                                     <select
                                         name="sex"
                                         className="form-select"
@@ -176,7 +176,7 @@ const IssueForm = ({ onSuccess }) => {
                                         onChange={handleInputChange}
                                         style={errors.sex ? { borderColor: '#f44336' } : {}}
                                     >
-                                        <option value="">Select Sex</option>
+                                        <option value="">Select</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>

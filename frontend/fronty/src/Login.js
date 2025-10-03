@@ -1,6 +1,139 @@
+// import React, { useState } from 'react';
+// import { useAuth } from './AuthProvider';
+// import backgroundImage from './6422443.jpg'; // Adjust path if needed
+
+// const Login = () => {
+//     const [username, setUsername] = useState('');
+//     const [password, setPassword] = useState('');
+//     const [error, setError] = useState('');
+//     const [loading, setLoading] = useState(false);
+//     const { login } = useAuth();
+
+//     const handleSubmit = async (e) => {
+//         e.preventDefault();
+//         setLoading(true);
+//         setError('');
+        
+//         const success = await login(username, password);
+//         if (!success) {
+//             setError('Invalid credentials');
+//         }
+//         setLoading(false);
+//     };
+
+//     return (
+//         <div 
+//             className="login-container"
+//             style={{
+//                 backgroundImage: `url(${backgroundImage})`,
+//                 backgroundSize: 'cover',
+//                 backgroundPosition: 'center',
+//                 backgroundRepeat: 'no-repeat',
+//                 minHeight: '100vh',
+//                 display: 'flex',
+//                 alignItems: 'center',
+//                 justifyContent: 'center'
+//             }}
+//         >
+//             <div 
+//                 className="login-card"
+//                 style={{
+//                     backgroundColor: 'transparent', // Semi-transparent white
+//                     // backdropFilter: 'blur(10px)', // Adds glass effect
+//                     borderRadius: '12px',
+//                     padding: '2rem',
+//                     width: '100%',
+//                     maxWidth: '400px',
+//                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+//                     border: '1px solid rgba(255, 255, 255, 0.2)'
+//                 }}
+//             >
+//                 <div className="login-title">
+//                     <i className="fas fa-mountain"></i>
+//                     GRAM CONNECT
+//                 </div>
+//                 <p className="login-subtitle">VILLAGE MANAGEMENT</p>
+                
+//                 <form onSubmit={handleSubmit}>
+//                     <div className="form-group">
+//                         <input
+//                             type="text"
+//                             className="form-input"
+//                             placeholder="Username"
+//                             value={username}
+//                             onChange={(e) => setUsername(e.target.value)}
+//                             required
+//                             style={{
+//                                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
+//                                 border: '1px solid rgba(0, 0, 0, 0.1)'
+//                             }}
+//                         />
+//                     </div>
+                    
+//                     <div className="form-group">
+//                         <input
+//                             type="password"
+//                             className="form-input"
+//                             placeholder="Password"
+//                             value={password}
+//                             onChange={(e) => setPassword(e.target.value)}
+//                             required
+//                             style={{
+//                                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
+//                                 border: '1px solid rgba(0, 0, 0, 0.1)'
+//                             }}
+//                         />
+//                     </div>
+                    
+//                     {error && (
+//                         <div className="error-message">{error}</div>
+//                     )}
+                    
+//                     <button
+//                         type="submit"
+//                         className="btn-primary"
+//                         disabled={loading}
+//                         style={{
+//                             backgroundColor: 'rgba(59, 130, 246, 0.9)',
+//                             border: 'none'
+//                         }}
+//                     >
+//                         {loading ? (
+//                             <>
+//                                 <i className="fas fa-spinner fa-spin"></i>
+//                                 Signing in...
+//                             </>
+//                         ) : (
+//                             <>
+//                                 <i className="fas fa-sign-in-alt"></i>
+//                                 Sign In
+//                             </>
+//                         )}
+//                     </button>
+//                 </form>
+                
+//                 <div style={{ 
+//                     marginTop: '20px', 
+//                     fontSize: '12px', 
+//                     color: '#666', 
+//                     textAlign: 'center',
+//                     backgroundColor: 'rgba(255, 255, 255, 0.7)',
+//                     padding: '10px',
+//                     borderRadius: '6px'
+//                 }}>
+//                     <strong>Demo Credentials:</strong><br/>
+//                     SPOC: spoc_doiwala / spoc123<br/>
+//                     Stakeholder: stakeholder1 / stake123
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+
+// export default Login;
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
-import backgroundImage from './6422443.jpg'; // Adjust path if needed
+import backgroundImage from './6422443.jpg';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -11,14 +144,42 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Login form submitted'); // Debug log
+        
+        // Basic validation
+        if (!username.trim() || !password.trim()) {
+            setError('Please enter both username and password');
+            return;
+        }
+
         setLoading(true);
         setError('');
         
-        const success = await login(username, password);
-        if (!success) {
-            setError('Invalid credentials');
+        try {
+            console.log('Attempting login with:', { username, password }); // Debug log
+            const success = await login(username, password);
+            console.log('Login result:', success); // Debug log
+            
+            if (!success) {
+                setError('Invalid username or password');
+            }
+        } catch (err) {
+            console.error('Login error:', err); // Debug log
+            setError('Login failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
+    };
+
+    // Test the login function directly
+    const testLogin = async () => {
+        console.log('Testing login function...');
+        try {
+            const result = await login('spoc_doiwala', 'spoc123');
+            console.log('Test login result:', result);
+        } catch (err) {
+            console.error('Test login error:', err);
+        }
     };
 
     return (
@@ -32,15 +193,17 @@ const Login = () => {
                 minHeight: '100vh',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                padding: '20px',
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
             }}
         >
             <div 
                 className="login-card"
                 style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Semi-transparent white
-                    backdropFilter: 'blur(10px)', // Adds glass effect
-                    borderRadius: '12px',
+                    backgroundColor: 'transparent',
+                    backdropFilter: 'blur(50px)',
+                    borderRadius: '16px',
                     padding: '2rem',
                     width: '100%',
                     maxWidth: '400px',
@@ -48,83 +211,153 @@ const Login = () => {
                     border: '1px solid rgba(255, 255, 255, 0.2)'
                 }}
             >
-                <div className="login-title">
-                    <i className="fas fa-mountain"></i>
-                    Dehradun Connect
+                {/* Header */}
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <h1 style={{ 
+                        fontSize: '28px', 
+                        fontWeight: 'bold', 
+                        color: '#072479',
+                        margin: '0 0 8px 0'
+                    }}>
+                        GRAM CONNECT
+                    </h1>
+                    <p style={{ 
+                        color: '#072479', 
+                        margin: 0,
+                        fontWeight: '600',
+                        fontSize: '14px'
+                    }}>
+                        VILLAGE MANAGEMENT
+                    </p>
                 </div>
-                <p className="login-subtitle">Village Issue Management System</p>
-                
+
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
+                    {/* Username Field */}
+                    <div style={{ marginBottom: '1rem' }}>
                         <input
                             type="text"
-                            className="form-input"
-                            placeholder="Username"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={(e) => {
+                                setUsername(e.target.value);
+                                setError(''); // Clear error when user types
+                            }}
                             required
                             style={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                border: '1px solid rgba(0, 0, 0, 0.1)'
+                                width: '100%',
+                                padding: '12px 16px',
+                                borderRadius: '8px',
+                                border: '2px solid #e1e5e9',
+                                backgroundColor: 'white',
+                                fontSize: '14px',
+                                outline: 'none',
+                                boxSizing: 'border-box'
                             }}
+                            placeholder="Username"
+                            disabled={loading}
                         />
                     </div>
-                    
-                    <div className="form-group">
+
+                    {/* Password Field */}
+                    <div style={{ marginBottom: '1.5rem' }}>
                         <input
                             type="password"
-                            className="form-input"
-                            placeholder="Password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setError(''); // Clear error when user types
+                            }}
                             required
                             style={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                border: '1px solid rgba(0, 0, 0, 0.1)'
+                                width: '100%',
+                                padding: '12px 16px',
+                                borderRadius: '8px',
+                                border: '2px solid #e1e5e9',
+                                backgroundColor: 'white',
+                                fontSize: '14px',
+                                outline: 'none',
+                                boxSizing: 'border-box'
                             }}
+                            placeholder="Password"
+                            disabled={loading}
                         />
                     </div>
-                    
+
+                    {/* Error Message */}
                     {error && (
-                        <div className="error-message">{error}</div>
+                        <div style={{
+                            backgroundColor: '#fee2e2',
+                            border: '1px solid #fecaca',
+                            color: '#dc2626',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            marginBottom: '1rem',
+                            fontSize: '14px',
+                            textAlign: 'center'
+                        }}>
+                            {error}
+                        </div>
                     )}
-                    
+
+                    {/* Login Button */}
                     <button
                         type="submit"
-                        className="btn-primary"
                         disabled={loading}
                         style={{
-                            backgroundColor: 'rgba(59, 130, 246, 0.9)',
-                            border: 'none'
+                            width: '100%',
+                            padding: '12px 16px',
+                            backgroundColor: loading ? '#9ca3af' : '#072479',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            transition: 'background-color 0.2s'
                         }}
                     >
-                        {loading ? (
-                            <>
-                                <i className="fas fa-spinner fa-spin"></i>
-                                Signing in...
-                            </>
-                        ) : (
-                            <>
-                                <i className="fas fa-sign-in-alt"></i>
-                                Sign In
-                            </>
-                        )}
+                        {loading ? 'Signing In...' : 'Sign In'}
                     </button>
                 </form>
-                
+
+                {/* Demo Credentials */}
                 <div style={{ 
-                    marginTop: '20px', 
-                    fontSize: '12px', 
-                    color: '#666', 
-                    textAlign: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    padding: '10px',
-                    borderRadius: '6px'
+                    marginTop: '1.5rem', 
+                    padding: '12px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
                 }}>
-                    <strong>Demo Credentials:</strong><br/>
-                    SPOC: spoc_doiwala / spoc123<br/>
-                    Stakeholder: stakeholder1 / stake123
+                    <p style={{ 
+                        margin: '0 0 8px 0', 
+                        fontSize: '12px', 
+                        fontWeight: 'bold',
+                        color: '#072479',
+                        textAlign: 'center'
+                    }}>
+                        DEMO CREDENTIALS
+                    </p>
+                    <div style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>
+                        <div><strong>SPOC:</strong> spoc_doiwala / spoc123</div>
+                        <div><strong>Stakeholder:</strong> stakeholder1 / stake123</div>
+                    </div>
                 </div>
+
+                {/* Debug button - remove in production */}
+                <button 
+                    onClick={testLogin}
+                    style={{
+                        marginTop: '10px',
+                        padding: '8px',
+                        fontSize: '10px',
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Test Login
+                </button>
             </div>
         </div>
     );

@@ -14,8 +14,13 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-CORS(app)
-
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 # Database Models
 class MasterTableState(db.Model):
     __tablename__ = 'master_table_state'
@@ -403,6 +408,18 @@ def create_user():
     
     return jsonify({'message': 'User created successfully'}), 201
 
+
+# Add this at the end of your app.py, before if __name__ == '__main__'
+@app.route('/api/debug/routes')
+def debug_routes():
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods),
+            'path': str(rule)
+        })
+    return jsonify({'routes': routes})
 @app.route('/api/dashboard/stats', methods=['GET'])
 @jwt_required()
 def get_dashboard_stats():
@@ -439,6 +456,345 @@ def get_dashboard_stats():
         }
     
     return jsonify({'stats': stats})
+
+
+
+
+# Master Data Creation Routes
+@app.route('/api/states', methods=['POST'])
+@jwt_required()
+@role_required(['superadmin'])
+def create_state():
+    data = request.get_json()
+    
+    state = MasterTableState(
+        stateName=data['stateName'],
+        createdBy=get_jwt_identity()
+    )
+    
+    db.session.add(state)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'State created successfully', 
+        'state_id': state.id,
+        'stateName': state.stateName
+    }), 201
+
+@app.route('/api/districts', methods=['POST'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def create_district():
+    data = request.get_json()
+    
+    district = MasterTableDistrict(
+        state_id=data['state_id'],
+        districtName=data['districtName'],
+        createdBy=get_jwt_identity()
+    )
+    
+    db.session.add(district)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'District created successfully', 
+        'district_id': district.id,
+        'districtName': district.districtName
+    }), 201
+
+@app.route('/api/blocks', methods=['POST'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def create_block():
+    data = request.get_json()
+    
+    block = MasterTableBlocks(
+        district_id=data['district_id'],
+        blockName=data['blockName'],
+        createdBy=get_jwt_identity()
+    )
+    
+    db.session.add(block)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Block created successfully', 
+        'block_id': block.id,
+        'blockName': block.blockName
+    }), 201
+
+@app.route('/api/gram-panchayats', methods=['POST'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def create_gram_panchayat():
+    data = request.get_json()
+    
+    gp = MasterTableGramPanchayat(
+        block_id=data['block_id'],
+        gramPancName=data['gramPancName'],
+        createdBy=get_jwt_identity()
+    )
+    
+    db.session.add(gp)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Gram Panchayat created successfully', 
+        'gram_panchayat_id': gp.id,
+        'gramPancName': gp.gramPancName
+    }), 201
+
+@app.route('/api/villages/create', methods=['POST'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def create_village():
+    data = request.get_json()
+    
+    village = MasterTableVillage(
+        gramPanchayat_id=data['gramPanchayat_id'],
+        villageName=data['villageName'],
+        populationFemale=data.get('populationFemale', 0),
+        populationMale=data.get('populationMale', 0),
+        area=data.get('area', 0),
+        total_hospital=data.get('total_hospital', 0),
+        total_schools=data.get('total_schools', 0),
+        createdBy=get_jwt_identity()
+    )
+    
+    db.session.add(village)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Village created successfully', 
+        'village_id': village.id,
+        'villageName': village.villageName
+    }), 201
+
+# Get routes for master data
+@app.route('/api/states', methods=['GET'])
+@jwt_required()
+def get_states():
+    states = MasterTableState.query.filter_by(status='active').all()
+    states_data = [{
+        'id': s.id, 
+        'stateName': s.stateName,
+        'createdOn': s.createdOn.isoformat() if s.createdOn else None
+    } for s in states]
+    return jsonify({'states': states_data})
+
+@app.route('/api/districts', methods=['GET'])
+@jwt_required()
+def get_districts():
+    districts = MasterTableDistrict.query.filter_by(status='active').all()
+    districts_data = [{
+        'id': d.id, 
+        'districtName': d.districtName,
+        'state_id': d.state_id,
+        'state_name': d.state.stateName if d.state else ''
+    } for d in districts]
+    return jsonify({'districts': districts_data})
+
+@app.route('/api/blocks', methods=['GET'])
+@jwt_required()
+def get_blocks():
+    blocks = MasterTableBlocks.query.filter_by(status='active').all()
+    blocks_data = [{
+        'id': b.id, 
+        'blockName': b.blockName,
+        'district_id': b.district_id,
+        'district_name': b.district.districtName if b.district else ''
+    } for b in blocks]
+    return jsonify({'blocks': blocks_data})
+
+@app.route('/api/gram-panchayats', methods=['GET'])
+@jwt_required()
+def get_gram_panchayats():
+    gps = MasterTableGramPanchayat.query.filter_by(status='active').all()
+    gps_data = [{
+        'id': gp.id, 
+        'gramPancName': gp.gramPancName,
+        'block_id': gp.block_id,
+        'block_name': gp.block.blockName if gp.block else ''
+    } for gp in gps]
+    return jsonify({'gram_panchayats': gps_data})
+
+
+
+
+   # Master Data Routes - Add these to your backend
+@app.route('/api/master-data/states', methods=['GET'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def get_all_states():
+    try:
+        states = MasterTableState.query.all()
+        states_data = [{
+            'id': s.id,
+            'stateName': s.stateName,
+            'status': s.status,
+            'createdOn': s.createdOn.isoformat() if s.createdOn else None,
+            'districts_count': len(s.districts)
+        } for s in states]
+        return jsonify({'states': states_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/master-data/districts', methods=['GET'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def get_all_districts():
+    try:
+        districts = MasterTableDistrict.query.all()
+        districts_data = [{
+            'id': d.id,
+            'districtName': d.districtName,
+            'state_id': d.state_id,
+            'state_name': d.state.stateName if d.state else '',
+            'status': d.status,
+            'createdOn': d.createdOn.isoformat() if d.createdOn else None,
+            'blocks_count': len(d.blocks)
+        } for d in districts]
+        return jsonify({'districts': districts_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/master-data/blocks', methods=['GET'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def get_all_blocks():
+    try:
+        blocks = MasterTableBlocks.query.all()
+        blocks_data = [{
+            'id': b.id,
+            'blockName': b.blockName,
+            'district_id': b.district_id,
+            'district_name': b.district.districtName if b.district else '',
+            'state_name': b.district.state.stateName if b.district and b.district.state else '',
+            'status': b.status,
+            'createdOn': b.createdOn.isoformat() if b.createdOn else None,
+            'gram_panchayats_count': len(b.gram_panchayats)
+        } for b in blocks]
+        return jsonify({'blocks': blocks_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/master-data/gram-panchayats', methods=['GET'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def get_all_gram_panchayats():
+    try:
+        gps = MasterTableGramPanchayat.query.all()
+        gps_data = [{
+            'id': gp.id,
+            'gramPancName': gp.gramPancName,
+            'block_id': gp.block_id,
+            'block_name': gp.block.blockName if gp.block else '',
+            'district_name': gp.block.district.districtName if gp.block and gp.block.district else '',
+            'status': gp.status,
+            'createdOn': gp.createdOn.isoformat() if gp.createdOn else None,
+            'villages_count': len(gp.villages)
+        } for gp in gps]
+        return jsonify({'gram_panchayats': gps_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/master-data/villages', methods=['GET'])
+@jwt_required()
+@role_required(['superadmin', 'admin'])
+def get_all_villages():
+    try:
+        villages = MasterTableVillage.query.all()
+        villages_data = [{
+            'id': v.id,
+            'villageName': v.villageName,
+            'gramPanchayat_id': v.gramPanchayat_id,
+            'gram_panchayat_name': v.gram_panchayat.gramPancName if v.gram_panchayat else '',
+            'block_name': v.gram_panchayat.block.blockName if v.gram_panchayat and v.gram_panchayat.block else '',
+            'district_name': v.gram_panchayat.block.district.districtName if v.gram_panchayat and v.gram_panchayat.block and v.gram_panchayat.block.district else '',
+            'populationFemale': v.populationFemale,
+            'populationMale': v.populationMale,
+            'area': v.area,
+            'total_hospital': v.total_hospital,
+            'total_schools': v.total_schools,
+            'status': v.status,
+            'createdOn': v.createdOn.isoformat() if v.createdOn else None
+        } for v in villages]
+        return jsonify({'villages': villages_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Status update routes
+@app.route('/api/master-data/<entity>/<int:entity_id>/status', methods=['PUT'])
+@jwt_required()
+@role_required(['superadmin'])
+def update_master_data_status(entity, entity_id):
+    data = request.get_json()
+    status = data.get('status')
+    
+    if status not in ['active', 'inactive']:
+        return jsonify({'message': 'Invalid status'}), 400
+    
+    entity_map = {
+        'states': MasterTableState,
+        'districts': MasterTableDistrict,
+        'blocks': MasterTableBlocks,
+        'gram-panchayats': MasterTableGramPanchayat,
+        'villages': MasterTableVillage
+    }
+    
+    if entity not in entity_map:
+        return jsonify({'message': 'Invalid entity type'}), 400
+    
+    model = entity_map[entity]
+    record = model.query.get_or_404(entity_id)
+    
+    record.status = status
+    record.updatedOn = datetime.utcnow()
+    record.updatedBy = get_jwt_identity()
+    
+    db.session.commit()
+    
+    return jsonify({'message': f'{entity.title()} status updated successfully'})
+
+# Edit master data
+@app.route('/api/master-data/<entity>/<int:entity_id>', methods=['PUT'])
+@jwt_required()
+@role_required(['superadmin'])
+def update_master_data(entity, entity_id):
+    data = request.get_json()
+    
+    entity_map = {
+        'states': (MasterTableState, ['stateName']),
+        'districts': (MasterTableDistrict, ['districtName', 'state_id']),
+        'blocks': (MasterTableBlocks, ['blockName', 'district_id']),
+        'gram-panchayats': (MasterTableGramPanchayat, ['gramPancName', 'block_id']),
+        'villages': (MasterTableVillage, ['villageName', 'gramPanchayat_id', 'populationFemale', 'populationMale', 'area', 'total_hospital', 'total_schools'])
+    }
+    
+    if entity not in entity_map:
+        return jsonify({'message': 'Invalid entity type'}), 400
+    
+    model, allowed_fields = entity_map[entity]
+    record = model.query.get_or_404(entity_id)
+    
+    for field in allowed_fields:
+        if field in data:
+            setattr(record, field, data[field])
+    
+    record.updatedOn = datetime.utcnow()
+    record.updatedBy = get_jwt_identity()
+    
+    db.session.commit()
+    
+    return jsonify({'message': f'{entity.title()} updated successfully'})
+def get_active_gram_panchayats():
+    gps = MasterTableGramPanchayat.query.filter_by(status='active').all()
+    gps_data = [{
+        'id': gp.id,
+        'gramPancName': gp.gramPancName,
+        'block_id': gp.block_id
+    } for gp in gps]
+    return jsonify({'gram_panchayats': gps_data})
 
 if __name__ == '__main__':
     with app.app_context():
