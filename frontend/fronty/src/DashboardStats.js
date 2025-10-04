@@ -1,76 +1,102 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
-import { apiService } from './App';
 
 const DashboardStats = () => {
     const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(true);
-    const { user } = useAuth();
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const data = await apiService.getDashboardStats();
-                setStats(data.stats);
-            } catch (error) {
-                console.error('Failed to fetch stats:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchStats();
     }, []);
 
-    if (loading) return <div className="loading"></div>;
+    const fetchStats = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/dashboard/stats', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-    const getStatsCards = () => {
-        switch (user.role) {
-            case 'superadmin':
-                return [
-                    { title: 'Total Users', value: stats.total_users || 0, icon: 'fas fa-users', color: 'blue' },
-                    { title: 'Total Issues', value: stats.total_issues || 0, icon: 'fas fa-exclamation-circle', color: 'green' },
-                    { title: 'Pending Issues', value: stats.pending_issues || 0, icon: 'fas fa-clock', color: 'orange' },
-                    { title: 'Resolved Issues', value: stats.resolved_issues || 0, icon: 'fas fa-check-circle', color: 'purple' },
-                ];
-            case 'admin':
-                return [
-                    { title: 'Total Issues', value: stats.total_issues || 0, icon: 'fas fa-exclamation-circle', color: 'green' },
-                    { title: 'Pending Issues', value: stats.pending_issues || 0, icon: 'fas fa-clock', color: 'orange' },
-                    { title: 'Resolved Issues', value: stats.resolved_issues || 0, icon: 'fas fa-check-circle', color: 'purple' },
-                    { title: 'Total Villages', value: stats.total_villages || 0, icon: 'fas fa-home', color: 'blue' },
-                ];
-            case 'spoc':
-                return [
-                    { title: 'My Issues', value: stats.my_issues || 0, icon: 'fas fa-file-alt', color: 'green' },
-                    { title: 'Pending', value: stats.pending_issues || 0, icon: 'fas fa-clock', color: 'orange' },
-                    { title: 'Resolved', value: stats.resolved_issues || 0, icon: 'fas fa-check-circle', color: 'purple' },
-                ];
-            case 'stakeholder':
-                return [
-                    { title: 'Available Issues', value: stats.available_issues || 0, icon: 'fas fa-hand-holding-heart', color: 'blue' },
-                    { title: 'Issues I Helped', value: stats.helped_issues || 0, icon: 'fas fa-heart', color: 'green' },
-                ];
-            default:
-                return [];
+            if (response.ok) {
+                const result = await response.json();
+                setStats(result.stats || {});
+            }
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    if (loading) {
+        return <div className="loading">Loading dashboard...</div>;
+    }
+
     return (
-        <div className="stats-grid">
-            {getStatsCards().map((stat, index) => (
-                <div key={index} className="stat-card animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="stat-header">
-                        <div className={`stat-icon ${stat.color}`}>
-                            <i className={stat.icon}></i>
+        <div className="dashboard-stats">
+            <h2>Dashboard Overview</h2>
+            <div className="stats-grid">
+                {stats.total_users !== undefined && (
+                    <div className="stat-card">
+                        <div className="stat-icon users">
+                            <i className="fas fa-users"></i>
                         </div>
-                        <div className="stat-content">
-                            <h3 className="animate-pulse">{stat.value}</h3>
-                            <p>{stat.title}</p>
+                        <div className="stat-info">
+                            <h3>{stats.total_users}</h3>
+                            <p>Total Users</p>
                         </div>
                     </div>
-                </div>
-            ))}
+                )}
+                
+                {stats.total_issues !== undefined && (
+                    <div className="stat-card">
+                        <div className="stat-icon issues">
+                            <i className="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div className="stat-info">
+                            <h3>{stats.total_issues}</h3>
+                            <p>Total Issues</p>
+                        </div>
+                    </div>
+                )}
+                
+                {stats.pending_issues !== undefined && (
+                    <div className="stat-card">
+                        <div className="stat-icon pending">
+                            <i className="fas fa-clock"></i>
+                        </div>
+                        <div className="stat-info">
+                            <h3>{stats.pending_issues}</h3>
+                            <p>Pending Issues</p>
+                        </div>
+                    </div>
+                )}
+                
+                {stats.resolved_issues !== undefined && (
+                    <div className="stat-card">
+                        <div className="stat-icon resolved">
+                            <i className="fas fa-check-circle"></i>
+                        </div>
+                        <div className="stat-info">
+                            <h3>{stats.resolved_issues}</h3>
+                            <p>Resolved Issues</p>
+                        </div>
+                    </div>
+                )}
+                
+                {stats.total_villages !== undefined && (
+                    <div className="stat-card">
+                        <div className="stat-icon villages">
+                            <i className="fas fa-village"></i>
+                        </div>
+                        <div className="stat-info">
+                            <h3>{stats.total_villages}</h3>
+                            <p>Total Villages</p>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

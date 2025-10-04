@@ -63,10 +63,22 @@ const IssueChart = ({ data }) => {
     }, [data]);
 
     return (
-        <div className="chart-container">
-            <h3 style={{ marginBottom: '20px', color: '#333' }}>Issue Categories Distribution</h3>
-            <canvas ref={chartRef}></canvas>
-        </div>
+       <div className="chart-container">
+    <h3 style={{ 
+        textAlign: 'center', 
+        fontSize: '2.2rem', 
+        fontWeight: '700', 
+        color: '#2d3748',
+        marginBottom: '25px',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        marginTop:'-10px',
+        
+    }}>
+        Issue Categories Distribution
+    </h3>
+    <canvas ref={chartRef}></canvas>
+</div>
     );
 };
 
