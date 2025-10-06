@@ -92,7 +92,7 @@ const IssuesList = () => {
                 <div className="card-header">
                     <i className="fas fa-list"></i>
                     {user.role === 'stakeholder' ? 'Available Issues to Help' : 
-                     user.role === 'spoc' ? 'My Village Issues' : 'All Issues'}
+                     user.role === 'spoc' ? 'My Village-Issues' : 'All Issues'}
                 </div>
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="table-container">
