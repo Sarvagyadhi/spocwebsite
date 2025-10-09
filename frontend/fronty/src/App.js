@@ -148,7 +148,7 @@ export const apiService = {
     },
 
     async getDashboardStats() {
-        return this.request('/dashboard/stats');
+        return this.request('/stats');
     },
 };
 

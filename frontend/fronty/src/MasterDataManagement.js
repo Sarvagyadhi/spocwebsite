@@ -642,19 +642,7 @@ const MasterDataManagement = () => {
                 </button>
             </div>
 
-            <div className="progress-steps">
-                {entities.map((entity, index) => (
-                    <div key={entity} className="step-container">
-                        <div className={`step ${activeEntity === entity ? 'active' : ''}`}>
-                            {/* <div className="step-icon">
-                                <i className={`fas ${entityConfig[entity]?.icon}`}></i>
-                            </div> */}
-                            <span>{entityConfig[entity]?.name}s</span>
-                        </div>
-                        {index < entities.length - 1 && <div className="step-connector"></div>}
-                    </div>
-                ))}
-            </div>
+            
 
             <div className="main-content">
                 <div className="content-header">

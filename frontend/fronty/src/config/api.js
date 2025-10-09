@@ -29,8 +29,8 @@ export const API_ENDPOINTS = {
     UPDATE_MASTER_DATA: (entity, id) => `${API_BASE_URL}/master-data/${entity}/${id}`,
     UPDATE_STATUS: (entity, id) => `${API_BASE_URL}/master-data/${entity}/${id}/status`,
     
-    // Other endpoints
-    DASHBOARD_STATS: `${API_BASE_URL}/dashboard/stats`,
+    // Dashboard and other endpoints
+    DASHBOARD_STATS: `${API_BASE_URL}/stats`,
     ISSUES: `${API_BASE_URL}/issues`,
     USERS: `${API_BASE_URL}/users`,
     ISSUE_TYPES: `${API_BASE_URL}/issue-types`,

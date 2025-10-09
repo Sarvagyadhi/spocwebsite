@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserProfile = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+            const response = await fetch(`${API_BASE_URL}/stats`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
